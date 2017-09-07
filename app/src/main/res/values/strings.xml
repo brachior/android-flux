@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">LibFlux</string>
+
+    <string name="flower">flowers</string>
+    <string name="circle">circles</string>
+</resources>
