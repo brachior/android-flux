@@ -58,6 +58,16 @@ public class FluxBuilder {
         return make(ctx, from, to, count, KIND_BITMAP, sizeMin, sizeMax, durationMin, durationMax, assets);
     }
 
+    public static void flux(Context ctx, final View from, View to, int count,
+                            float radiusMin, float radiusMax, int durationMin, int durationMax) {
+        make(ctx, from, to, count, KIND_RADIUS, radiusMin, radiusMax, durationMin, durationMax, null).start();
+    }
+
+    public static void flux(Context ctx, View from, View to, int count, List<String> assets,
+                            int sizeMin, int sizeMax, int durationMin, int durationMax) {
+        make(ctx, from, to, count, KIND_BITMAP, sizeMin, sizeMax, durationMin, durationMax, assets).start();
+    }
+
     /*************/
     /** private **/
     /*************/
