@@ -214,24 +214,34 @@ public interface Flux {
                                         defaultInterpolators();
                                     }
 
-                                    ValueAnimator fadeOut = ValueAnimator.ofFloat(1.f, 0.f);
-                                    fadeOut.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-                                        @Override
-                                        public void onAnimationUpdate(ValueAnimator animation) {
-                                            from.setAlpha((float) animation.getAnimatedValue());
-                                            from.requestLayout();
-                                        }
-                                    });
-                                    animators.add(fadeOut);
-
                                     type.build();
 
-                                    fadeOut.setDuration(maxDuration + 200);
-
-                                    AnimatorSet set = new AnimatorSet();
+                                    final AnimatorSet set = new AnimatorSet();
                                     set.playTogether(animators);
+                                    set.setStartDelay(250);
 
-                                    flux.init(set);
+                                    ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+                                    animator.setDuration(250);
+                                    animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+                                        @Override
+                                        public void onAnimationUpdate(ValueAnimator animation) {
+                                            from.setTranslationX((random.nextFloat() - 0.5f) * from.getWidth() * 0.05f);
+                                            from.setTranslationY((random.nextFloat() - 0.5f) * from.getHeight() * 0.05f);
+                                        }
+                                    });
+                                    animator.addListener(new AnimatorListenerAdapter() {
+                                        @Override
+                                        public void onAnimationStart(Animator animation) {
+                                            set.start();
+                                        }
+
+                                        @Override
+                                        public void onAnimationEnd(Animator animation) {
+                                            from.setAlpha(0);
+                                        }
+                                    });
+
+                                    flux.init(animator);
                                 }
                             });
                         }

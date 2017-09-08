@@ -14,7 +14,7 @@ class FluxImpl implements Flux {
         this.deleguate = new EmptyFlux();
     }
 
-    void init(AnimatorSet animator) {
+    void init(Animator animator) {
         this.deleguate = new AnimFlux(animator);
     }
 
@@ -94,9 +94,9 @@ class FluxImpl implements Flux {
     /*************/
 
     private final class AnimFlux implements Flux {
-        private final AnimatorSet animator;
+        private final Animator animator;
 
-        AnimFlux(AnimatorSet animator) {
+        AnimFlux(Animator animator) {
             this.animator = animator;
         }
 
