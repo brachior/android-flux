@@ -4,11 +4,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 
 import net.brach.android.flux.Flux;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     private final List<String> bitmaps = Arrays.asList(
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
             "bitmaps/flower_5.png"
     );
 
+    private Random random;
     private View to;
 
     @Override
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        random = new Random();
         to = findViewById(R.id.end);
 
         findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
@@ -41,19 +45,21 @@ public class MainActivity extends AppCompatActivity {
     private void init() {
         ViewGroup flowers = (ViewGroup) findViewById(R.id.flowers);
         for (int i = 0; i < flowers.getChildCount(); i++) {
-            View button = flowers.getChildAt(i);
+            Button button = (Button) flowers.getChildAt(i);
 
             button.setAlpha(1);
             button.setClickable(true);
 
+            int count = 1 + random.nextInt(100);
             final Flux flux = new Flux.FluxBuilder(this)
                     .from(button)
                     .to(to)
-                    .number(55)
-                    .assets(bitmaps, 20, 70)
+                    .number(count)
+                    .assets(bitmaps, 15, 65)
                     .duration(1000, 1500)
                     .build();
 
+            button.setText(String.valueOf(count));
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -65,19 +71,21 @@ public class MainActivity extends AppCompatActivity {
 
         ViewGroup circles = (ViewGroup) findViewById(R.id.circles);
         for (int i = 0; i < circles.getChildCount(); i++) {
-            View button = circles.getChildAt(i);
+            Button button = (Button) circles.getChildAt(i);
 
             button.setAlpha(1);
             button.setClickable(true);
 
+            int count = 1 + random.nextInt(100);
             final Flux flux = new Flux.FluxBuilder(this)
                     .from(button)
                     .to(to)
-                    .number(55)
-                    .circle(15, 20)
+                    .number(count)
+                    .circle(7, 12)
                     .duration(1000, 1500)
                     .build();
 
+            button.setText(String.valueOf(count));
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

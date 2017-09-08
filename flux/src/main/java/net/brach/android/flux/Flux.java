@@ -88,7 +88,7 @@ public interface Flux {
 
         private int count;
         private int x1, y1;
-        private int x3, y3;
+        private int x4, y4;
 
         private FluxType type;
 
@@ -107,7 +107,7 @@ public interface Flux {
             activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
 
             type = null;
-            durationMin = durationMax = topOffset = count = x1 = y1 = x3 = y3 = -1;
+            durationMin = durationMax = topOffset = count = x1 = y1 = x4 = y4 = -1;
             maxDuration = 0;
 
             animators = new ArrayList<>();
@@ -207,8 +207,8 @@ public interface Flux {
                                     int[] location = new int[2];
                                     to.getLocationInWindow(location);
 
-                                    x3 = location[0] + to.getWidth() / 2;
-                                    y3 = location[1] + to.getHeight() / 2 - topOffset;
+                                    x4 = location[0] + to.getWidth() / 2;
+                                    y4 = location[1] + to.getHeight() / 2 - topOffset;
 
                                     if (interpolators.isEmpty()) {
                                         defaultInterpolators();
@@ -291,46 +291,63 @@ public interface Flux {
             }
         }
 
-        private interface FluxType {
-            void build();
-        }
-
-        private final class Radius implements FluxType {
-            private final float min;
-            private final float max;
-
-            private Radius(float min, float max) {
-                this.min = min;
-                this.max = max;
-            }
-
-            @Override
-            public void build() {
+        private abstract class FluxType {
+            void build() {
                 Context ctx = getContext();
                 int durationInterval = durationMax - durationMin;
-                float radiusInterval = max - min;
 
                 for (int i = 0; i < count; i++) {
+                    float x1 = FluxBuilder.this.x1 + (int) (random.nextBoolean() ? -(random.nextFloat() * (from.getWidth() / 4)) : random.nextFloat() * (from.getWidth() / 4));
+                    float y1 = FluxBuilder.this.y1 - (int) (random.nextBoolean() ? -(random.nextFloat() * from.getHeight() / 3) : random.nextFloat() * from.getHeight() / 3);
+
+                    float x2 = x1 + (random.nextBoolean() ? -random.nextFloat() * 200 : random.nextFloat() * 200);
+                    float y2 = y1 - (100 + random.nextFloat() * 200);
+
+                    float x3 = middle(random, x2, x4);
+                    float y3 = middle(random, y2, y4);
+
                     Path path = new Path();
                     path.moveTo(x1, y1);
-                    path.quadTo(middle(random, x1, x3), middle(random, y1, y3), x3, y3);
+                    path.cubicTo(x2, y2, x3, y3, x4, y4);
 
-                    Particule particule = new Particule(ctx);
                     int duration = random.nextInt(durationInterval) + durationMin;
-                    float radius = min + (radiusInterval * random.nextFloat());
                     TimeInterpolator interpolator = interpolators.get(random.nextInt(interpolators.size()));
-                    particule.init(root, path, x1, y1, radius, duration, interpolator);
-                    animators.add(particule.anim());
-                    root.addView(particule);
+
+                    int delay = random.nextInt(duration / 2);
+                    duration -= delay;
+
+                    Particle particle = create(ctx, path, delay, duration, interpolator);
+                    animators.add(particle.anim());
+                    root.addView(particle);
 
                     if (duration > maxDuration) {
                         maxDuration = duration;
                     }
                 }
             }
+            abstract Particle create(Context ctx, Path path, int delay, int duration, TimeInterpolator interpolator);
         }
 
-        private final class Asset implements FluxType {
+        private final class Radius extends FluxType {
+            private final float min;
+            private final float max;
+
+            private Radius(float min, float max) {
+                this.min = min;
+                this.max = max - min;
+            }
+
+            @Override
+            Particle create(Context ctx, Path path, int delay, int duration, TimeInterpolator interpolator) {
+                float radius = min + (max * random.nextFloat());
+
+                Particle particle = new Particle(ctx);
+                particle.init(root, path, x1, y1, radius, delay, duration, interpolator);
+                return particle;
+            }
+        }
+
+        private final class Asset extends FluxType {
             private final List<String> assets;
             private final int min;
             private final int max;
@@ -338,53 +355,37 @@ public interface Flux {
             private Asset(List<String> assets, int min, int max) {
                 this.assets = assets;
                 this.min = min;
-                this.max = max;
+                this.max = max - min;
             }
 
             @Override
-            public void build() {
-                Context ctx = getContext();
-                int durationInterval = durationMax - durationMin;
-                int sizeInterval = max - min;
+            Particle create(Context ctx, Path path, int delay, int duration, TimeInterpolator interpolator) {
+                int size = random.nextInt(max) + min;
 
-                for (int i = 0; i < count; i++) {
-                    Path path = new Path();
-                    path.moveTo(x1, y1);
-                    path.quadTo(middle(random, x1, x3), middle(random, y1, y3), x3, y3);
-
-                    Particule particule = new Particule(ctx);
-                    int duration = random.nextInt(durationInterval) + durationMin;
-                    int size = random.nextInt(sizeInterval) + min;
-                    TimeInterpolator interpolator = interpolators.get(random.nextInt(interpolators.size()));
-                    particule.init(root, path, x1, y1, size, assets.get(random.nextInt(assets.size())), duration, interpolator);
-                    animators.add(particule.anim());
-                    root.addView(particule);
-
-                    if (duration > maxDuration) {
-                        maxDuration = duration;
-                    }
-                }
+                Particle particle = new Particle(ctx);
+                particle.init(root, path, x1, y1, size, assets.get(random.nextInt(assets.size())), delay, duration, interpolator);
+                return particle;
             }
         }
 
-        public static class Particule extends View {
+        public static class Particle extends View {
             private Paint paint;
 
             private float cx;
             private float cy;
             private ValueAnimator animator;
 
-            private Particule.Behavior behavior;
+            private Particle.Behavior behavior;
 
-            public Particule(Context context) {
+            public Particle(Context context) {
                 super(context);
             }
 
-            public Particule(Context context, @Nullable AttributeSet attrs) {
+            public Particle(Context context, @Nullable AttributeSet attrs) {
                 super(context, attrs);
             }
 
-            public Particule(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+            public Particle(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
                 super(context, attrs, defStyleAttr);
             }
 
@@ -402,21 +403,21 @@ public interface Flux {
             /** private **/
             /*************/
 
-            void init(ViewGroup root, Path path, float cx, float cy, float radius, int duration, TimeInterpolator interpolator) {
-                behavior = new Particule.Radius(radius);
-                init(root, path, cx, cy, duration, interpolator);
+            void init(ViewGroup root, Path path, float cx, float cy, float radius, int delay, int duration, TimeInterpolator interpolator) {
+                behavior = new Particle.Radius(radius);
+                init(root, path, cx, cy, delay, duration, interpolator);
             }
 
-            void init(ViewGroup root, Path path, float cx, float cy, int size, String asset, int duration, TimeInterpolator interpolator) {
-                behavior = new Particule.Asset(asset, size);
-                init(root, path, cx, cy, duration, interpolator);
+            void init(ViewGroup root, Path path, float cx, float cy, int size, String asset, int delay, int duration, TimeInterpolator interpolator) {
+                behavior = new Particle.Asset(asset, size);
+                init(root, path, cx, cy, delay, duration, interpolator);
             }
 
             Animator anim() {
                 return animator;
             }
 
-            private void init(final ViewGroup root, final Path path, float cx, float cy, int duration, TimeInterpolator interpolator) {
+            private void init(final ViewGroup root, final Path path, float cx, float cy, int delay, int duration, TimeInterpolator interpolator) {
                 paint = new Paint();
                 paint.setColor(Color.BLUE);
 
@@ -425,6 +426,7 @@ public interface Flux {
 
                 ValueAnimator animator = ValueAnimator.ofFloat(0.f, 1.f);
                 animator.setDuration(duration);
+                animator.setStartDelay(delay);
                 animator.setInterpolator(interpolator);
                 animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
                     private final float[] point = new float[2];
@@ -436,18 +438,18 @@ public interface Flux {
                         PathMeasure pathMeasure = new PathMeasure(path, false);
                         pathMeasure.getPosTan(pathMeasure.getLength() * val, point, null);
 
+                        setVisibility(VISIBLE);
+
                         move(point[0], point[1]);
                     }
                 });
                 animator.addListener(new AnimatorListenerAdapter() {
                     @Override
-                    public void onAnimationStart(Animator animation) {
-                        setVisibility(VISIBLE);
-                    }
+                    public void onAnimationStart(Animator animation) {}
 
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        root.removeView(Particule.this);
+                        root.removeView(Particle.this);
                     }
                 });
 
@@ -463,7 +465,7 @@ public interface Flux {
                 invalidate();
             }
 
-            private class Radius implements Particule.Behavior {
+            private class Radius implements Particle.Behavior {
                 private float radius;
 
                 Radius(float radius) {
@@ -476,7 +478,7 @@ public interface Flux {
                 }
             }
 
-            private class Asset implements Particule.Behavior {
+            private class Asset implements Particle.Behavior {
                 private Bitmap bitmap;
 
                 Asset(String asset, int size) {
