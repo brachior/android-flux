@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import net.brach.android.flux.Flux;
-import net.brach.android.flux.FluxBuilder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +35,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        FluxBuilder.attach2Activity(this);
-
         init();
     }
 
@@ -48,7 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
             button.setAlpha(1);
             button.setClickable(true);
-            final Flux flux = FluxBuilder.make(this, button, to, 55, bitmaps, 20, 70, 1000, 1500);
+
+            final Flux flux = new Flux.FluxBuilder(this)
+                    .from(button)
+                    .to(to)
+                    .number(55)
+                    .assets(bitmaps, 20, 70)
+                    .duration(1000, 1500)
+                    .build();
+
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -64,7 +69,15 @@ public class MainActivity extends AppCompatActivity {
 
             button.setAlpha(1);
             button.setClickable(true);
-            final Flux flux = FluxBuilder.make(this, button, to, 55, 15, 20, 1000, 1500);
+
+            final Flux flux = new Flux.FluxBuilder(this)
+                    .from(button)
+                    .to(to)
+                    .number(55)
+                    .circle(15, 20)
+                    .duration(1000, 1500)
+                    .build();
+
             button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
