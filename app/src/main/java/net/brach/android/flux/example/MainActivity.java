@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        ViewGroup flowers = (ViewGroup) findViewById(R.id.flowers);
+        ViewGroup flowers = findViewById(R.id.flowers);
         for (int i = 0; i < flowers.getChildCount(); i++) {
             Button button = (Button) flowers.getChildAt(i);
 
@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             button.setClickable(true);
 
             int count = 1 + random.nextInt(100);
-            final Flux flux = new Flux.FluxBuilder(this)
+            final Flux flux = new Flux.Builder(this)
                     .from(button)
                     .to(to)
                     .number(count)
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        ViewGroup circles = (ViewGroup) findViewById(R.id.circles);
+        ViewGroup circles = findViewById(R.id.circles);
         for (int i = 0; i < circles.getChildCount(); i++) {
             Button button = (Button) circles.getChildAt(i);
 
@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
             button.setClickable(true);
 
             int count = 1 + random.nextInt(100);
-            final Flux flux = new Flux.FluxBuilder(this)
+            final Flux flux = new Flux.Builder(this)
                     .from(button)
                     .to(to)
                     .number(count)

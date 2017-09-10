@@ -1,7 +1,6 @@
 package net.brach.android.flux;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.annotation.TargetApi;
 import android.os.Build;
 

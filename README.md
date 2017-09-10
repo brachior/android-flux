@@ -19,31 +19,19 @@ dependencies {
 
 ##### ➫ JAVA
 
-You have to initiate the FluxBuilder calling 'attach2Activity':
+No need to initialized.
+Use the _Flux.Builder_ to pre-calculate the animation.
+Then call the _'start()'_ function to run the animation.
 
 ```java
-FluxBuilder.attach2Activity(this);
-```
+final Flux flux = new Flux.Builder(this)
+        .from(button)
+        .to(to)
+        .number(1 + random.nextInt(100))
+        .assets(bitmaps, 15, 65)
+        .duration(1000, 1500)
+        .build();
 
-After you can call a flux:
-
-```java
-button.setOnClickListener(new View.OnClickListener() {
-    @Override
-    public void onClick(View v) {
-        // using bitmaps
-        FluxBuilder.flux(this, button, to, 55, bitmaps, 20, 70, 1000, 1500);
-
-        // using circles
-        FluxBuilder.flux(this, button, to, 55, 15, 20, 1000, 1500);
-    }
-});
-```
-
-You can pre-calculate the animation calling 'make'.
-
-```java
-final Flux flux = FluxBuilder.make(this, button, to, 55, 15, 20, 1000, 1500);
 button.setOnClickListener(new View.OnClickListener() {
     @Override
     public void onClick(View v) {

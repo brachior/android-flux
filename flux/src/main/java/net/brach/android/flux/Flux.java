@@ -77,7 +77,7 @@ public interface Flux {
 
     boolean isRunning();
 
-    class FluxBuilder {
+    class Builder {
         private static final Random random = new Random();
 
         private int topOffset;
@@ -100,8 +100,8 @@ public interface Flux {
         private final List<Animator> animators;
         private final ArrayList<TimeInterpolator> interpolators;
 
-        public FluxBuilder(final Activity activity) {
-            root = (ViewGroup) activity.findViewById(Window.ID_ANDROID_CONTENT);
+        public Builder(final Activity activity) {
+            root = activity.findViewById(Window.ID_ANDROID_CONTENT);
 
             dm = new DisplayMetrics();
             activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -114,32 +114,32 @@ public interface Flux {
             interpolators = new ArrayList<>();
         }
 
-        public FluxBuilder number(int count) {
+        public Builder number(int count) {
             this.count = count;
 
             return this;
         }
 
-        public FluxBuilder from(final View from) {
+        public Builder from(final View from) {
             this.from = from;
 
             return this;
         }
 
-        public FluxBuilder to(final View to) {
+        public Builder to(final View to) {
             this.to = to;
 
             return this;
         }
 
-        public FluxBuilder duration(int min, int max) {
+        public Builder duration(int min, int max) {
             this.durationMin = min;
             this.durationMax = max;
 
             return this;
         }
 
-        public FluxBuilder circle(float radiusMin, float radiusMax) {
+        public Builder circle(float radiusMin, float radiusMax) {
             if (type != null) {
                 throw new IllegalStateException();
             }
@@ -149,7 +149,7 @@ public interface Flux {
             return this;
         }
 
-        public FluxBuilder assets(List<String> assets, int sizeMin, int sizeMax) {
+        public Builder assets(List<String> assets, int sizeMin, int sizeMax) {
             if (type != null) {
                 throw new IllegalStateException();
             }
@@ -159,13 +159,13 @@ public interface Flux {
             return this;
         }
 
-        public FluxBuilder addInterpolators(TimeInterpolator... interpolators) {
+        public Builder addInterpolators(TimeInterpolator... interpolators) {
             Collections.addAll(this.interpolators, interpolators);
 
             return this;
         }
 
-        public FluxBuilder removeInterpolators(TimeInterpolator... interpolators) {
+        public Builder removeInterpolators(TimeInterpolator... interpolators) {
             for (TimeInterpolator interpolator : interpolators) {
                 this.interpolators.remove(interpolator);
             }
@@ -173,7 +173,7 @@ public interface Flux {
             return this;
         }
 
-        public FluxBuilder clearInterpolators() {
+        public Builder clearInterpolators() {
             interpolators.clear();
 
             return this;
@@ -307,8 +307,8 @@ public interface Flux {
                 int durationInterval = durationMax - durationMin;
 
                 for (int i = 0; i < count; i++) {
-                    float x1 = FluxBuilder.this.x1 + (int) (random.nextBoolean() ? -(random.nextFloat() * (from.getWidth() / 4)) : random.nextFloat() * (from.getWidth() / 4));
-                    float y1 = FluxBuilder.this.y1 - (int) (random.nextBoolean() ? -(random.nextFloat() * from.getHeight() / 3) : random.nextFloat() * from.getHeight() / 3);
+                    float x1 = Builder.this.x1 + (int) (random.nextBoolean() ? -(random.nextFloat() * (from.getWidth() / 4)) : random.nextFloat() * (from.getWidth() / 4));
+                    float y1 = Builder.this.y1 - (int) (random.nextBoolean() ? -(random.nextFloat() * from.getHeight() / 3) : random.nextFloat() * from.getHeight() / 3);
 
                     float x2 = x1 + (random.nextBoolean() ? -random.nextFloat() * 200 : random.nextFloat() * 200);
                     float y2 = y1 - (100 + random.nextFloat() * 200);
