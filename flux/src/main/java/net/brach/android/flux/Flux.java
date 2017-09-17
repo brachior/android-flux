@@ -77,6 +77,8 @@ public interface Flux {
 
     boolean isRunning();
 
+    void remove();
+
     class Builder {
         private static final Random random = new Random();
 
@@ -120,13 +122,13 @@ public interface Flux {
             return this;
         }
 
-        public Builder from(final View from) {
+        public Builder from(View from) {
             this.from = from;
 
             return this;
         }
 
-        public Builder to(final View to) {
+        public Builder to(View to) {
             this.to = to;
 
             return this;
@@ -179,6 +181,10 @@ public interface Flux {
             return this;
         }
 
+        public void run() {
+            build().start();
+        }
+
         public Flux build() {
             if (type == null || from == null || to == null
                     || durationMin == -1 || durationMax == -1 || count == -1) {
@@ -214,7 +220,7 @@ public interface Flux {
                                         defaultInterpolators();
                                     }
 
-                                    type.build();
+                                    ArrayList<Particle> particles = type.build();
 
                                     final AnimatorSet set = new AnimatorSet();
                                     set.playTogether(animators);
@@ -241,7 +247,7 @@ public interface Flux {
                                         }
                                     });
 
-                                    flux.init(animator);
+                                    flux.init(particles, animator);
                                 }
                             });
                         }
@@ -302,9 +308,10 @@ public interface Flux {
         }
 
         private abstract class FluxType {
-            void build() {
+            ArrayList<Particle> build() {
                 Context ctx = getContext();
                 int durationInterval = durationMax - durationMin;
+                ArrayList<Particle> particles = new ArrayList<>(count);
 
                 for (int i = 0; i < count; i++) {
                     float x1 = Builder.this.x1 + (int) (random.nextBoolean() ? -(random.nextFloat() * (from.getWidth() / 4)) : random.nextFloat() * (from.getWidth() / 4));
@@ -326,15 +333,19 @@ public interface Flux {
                     int delay = random.nextInt(duration / 2);
                     duration -= delay;
 
-                    Particle particle = create(ctx, path, delay, duration, interpolator);
+                    final Particle particle = create(ctx, path, delay, duration, interpolator);
                     animators.add(particle.anim());
+                    particles.add(particle);
                     root.addView(particle);
 
                     if (duration > maxDuration) {
                         maxDuration = duration;
                     }
                 }
+
+                return particles;
             }
+
             abstract Particle create(Context ctx, Path path, int delay, int duration, TimeInterpolator interpolator);
         }
 
@@ -399,9 +410,9 @@ public interface Flux {
                 super(context, attrs, defStyleAttr);
             }
 
-            /*******************************/
-            /** {@link android.view.View} **/
-            /*******************************/
+            /******************/
+            /** {@link View} **/
+            /******************/
 
             @Override
             protected void onDraw(Canvas canvas) {
@@ -448,14 +459,14 @@ public interface Flux {
                         PathMeasure pathMeasure = new PathMeasure(path, false);
                         pathMeasure.getPosTan(pathMeasure.getLength() * val, point, null);
 
-                        setVisibility(VISIBLE);
-
                         move(point[0], point[1]);
                     }
                 });
                 animator.addListener(new AnimatorListenerAdapter() {
                     @Override
-                    public void onAnimationStart(Animator animation) {}
+                    public void onAnimationStart(Animator animation) {
+                        setVisibility(VISIBLE);
+                    }
 
                     @Override
                     public void onAnimationEnd(Animator animation) {

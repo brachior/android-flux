@@ -3,89 +3,149 @@ package net.brach.android.flux;
 import android.animation.Animator;
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 
 class FluxImpl implements Flux {
-    private Flux deleguate;
+    private final static int STOPPED = 0;
+    private final static int STARTED = 1;
+    private final static int PAUSED = 2;
+    private final static int RESUMED = 3;
+    private final static int CANCELED = 4;
+    private final static int ENDED = 5;
+    private final static int REMOVED = 6;
+
+    private Flux delegate;
 
     FluxImpl() {
-        this.deleguate = new EmptyFlux();
+        this.delegate = new EmptyFlux();
     }
 
-    void init(Animator animator) {
-        this.deleguate = new AnimFlux(animator);
+    void init(ArrayList<Flux.Builder.Particle> particles, Animator animator) {
+        Flux flux = this.delegate;
+        this.delegate = new AnimFlux(particles, animator);
+        if (flux instanceof EmptyFlux) {
+            EmptyFlux previous = (EmptyFlux) flux;
+
+            for (Animator.AnimatorListener listener: previous.listeners) {
+                this.delegate.addListener(listener);
+            }
+
+            for (Animator.AnimatorPauseListener listener: previous.pauseListeners) {
+                this.delegate.addPauseListener(listener);
+            }
+
+            switch (previous.status) {
+                case STARTED:
+                    this.delegate.start();
+                    break;
+                case PAUSED:
+                    this.delegate.start();
+                    this.delegate.pause();
+                    break;
+                case RESUMED:
+                    this.delegate.start();
+                    this.delegate.pause();
+                    this.delegate.resume();
+                    break;
+                case CANCELED:
+                    this.delegate.start();
+                    this.delegate.cancel();
+                    break;
+                case ENDED:
+                    this.delegate.end();
+                    break;
+                case REMOVED:
+                    this.delegate.remove();
+                    break;
+                case STOPPED:
+                    break;
+            }
+        }
     }
 
     public void addListener(Animator.AnimatorListener listener) {
-        this.deleguate.addListener(listener);
+        this.delegate.addListener(listener);
     }
 
     public void start() {
-        this.deleguate.start();
+        this.delegate.start();
     }
 
     public void cancel() {
-        this.deleguate.cancel();
+        this.delegate.cancel();
     }
 
     public void end() {
-        this.deleguate.end();
+        this.delegate.end();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public void pause() {
-        this.deleguate.pause();
+        this.delegate.pause();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public void resume() {
-        this.deleguate.resume();
+        this.delegate.resume();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public boolean isPaused() {
-        return this.deleguate.isPaused();
+        return this.delegate.isPaused();
     }
 
     @TargetApi(Build.VERSION_CODES.N)
     public long getTotalDuration() {
-        return this.deleguate.getTotalDuration();
+        return this.delegate.getTotalDuration();
     }
 
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public boolean isStarted() {
-        return this.deleguate.isStarted();
+        return this.delegate.isStarted();
     }
 
     public void removeListener(Animator.AnimatorListener listener) {
-        this.deleguate.removeListener(listener);
+        this.delegate.removeListener(listener);
     }
 
     public ArrayList<Animator.AnimatorListener> getListeners() {
-        return this.deleguate.getListeners();
+        return this.delegate.getListeners();
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public void addPauseListener(Animator.AnimatorPauseListener listener) {
-        this.deleguate.addPauseListener(listener);
+        this.delegate.addPauseListener(listener);
     }
 
     @TargetApi(Build.VERSION_CODES.KITKAT)
     public void removePauseListener(Animator.AnimatorPauseListener listener) {
-        this.deleguate.removePauseListener(listener);
+        this.delegate.removePauseListener(listener);
     }
 
     public void removeAllListeners() {
-        this.deleguate.removeAllListeners();
+        this.delegate.removeAllListeners();
     }
 
     public long getDuration() {
-        return this.deleguate.getDuration();
+        return this.delegate.getDuration();
     }
 
     public boolean isRunning() {
-        return this.deleguate.isRunning();
+        return this.delegate.isRunning();
+    }
+
+    @Override
+    public void remove() {
+        this.delegate.remove();
+    }
+
+    @Override
+    public String toString() {
+        return this.delegate.getClass().getSimpleName();
     }
 
     /*************/
@@ -93,9 +153,11 @@ class FluxImpl implements Flux {
     /*************/
 
     private final class AnimFlux implements Flux {
+        private final ArrayList<Flux.Builder.Particle> particles;
         private final Animator animator;
 
-        AnimFlux(Animator animator) {
+        AnimFlux(ArrayList<Flux.Builder.Particle> particles, Animator animator) {
+            this.particles = particles;
             this.animator = animator;
         }
 
@@ -112,6 +174,7 @@ class FluxImpl implements Flux {
         @Override
         public void cancel() {
             animator.cancel();
+            remove();
         }
 
         @Override
@@ -185,33 +248,67 @@ class FluxImpl implements Flux {
         public boolean isRunning() {
             return animator.isRunning();
         }
+
+        @Override
+        public void remove() {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    for (Flux.Builder.Particle particle: particles) {
+                        ((ViewGroup) particle.getParent()).removeView(particle);
+                    }
+                }
+            });
+        }
     }
 
-    private final class EmptyFlux implements Flux {
-        @Override
-        public void addListener(Animator.AnimatorListener listener) {}
+    private static final class EmptyFlux implements Flux {
+        int status;
+        ArrayList<Animator.AnimatorListener> listeners;
+        ArrayList<Animator.AnimatorPauseListener> pauseListeners;
+
+        EmptyFlux() {
+            status = STOPPED;
+            listeners = new ArrayList<>();
+            pauseListeners = new ArrayList<>();
+        }
 
         @Override
-        public void start() {}
+        public void addListener(Animator.AnimatorListener listener) {
+            listeners.add(listener);
+        }
 
         @Override
-        public void cancel() {}
+        public void start() {
+            status = STARTED;
+        }
 
         @Override
-        public void end() {}
+        public void cancel() {
+            status = CANCELED;
+        }
+
+        @Override
+        public void end() {
+            status = ENDED;
+        }
 
         @Override
         @TargetApi(Build.VERSION_CODES.KITKAT)
-        public void pause() {}
+        public void pause() {
+            status = PAUSED;
+        }
 
         @Override
         @TargetApi(Build.VERSION_CODES.KITKAT)
-        public void resume() {}
+        public void resume() {
+            status = RESUMED;
+        }
 
         @Override
         @TargetApi(Build.VERSION_CODES.KITKAT)
         public boolean isPaused() {
-            return false;
+            return status == PAUSED;
         }
 
         @Override
@@ -223,27 +320,36 @@ class FluxImpl implements Flux {
         @Override
         @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
         public boolean isStarted() {
-            return false;
+            return status == STARTED;
         }
 
         @Override
-        public void removeListener(Animator.AnimatorListener listener) {}
+        public void removeListener(Animator.AnimatorListener listener) {
+            listeners.remove(listener);
+        }
 
         @Override
         public ArrayList<Animator.AnimatorListener> getListeners() {
-            return null;
+            return listeners;
         }
 
         @Override
         @TargetApi(Build.VERSION_CODES.KITKAT)
-        public void addPauseListener(Animator.AnimatorPauseListener listener) {}
+        public void addPauseListener(Animator.AnimatorPauseListener listener) {
+            pauseListeners.add(listener);
+        }
 
         @Override
         @TargetApi(Build.VERSION_CODES.KITKAT)
-        public void removePauseListener(Animator.AnimatorPauseListener listener) {}
+        public void removePauseListener(Animator.AnimatorPauseListener listener) {
+            pauseListeners.remove(listener);
+        }
 
         @Override
-        public void removeAllListeners() {}
+        public void removeAllListeners() {
+            listeners.clear();
+            pauseListeners.clear();
+        }
 
         @Override
         public long getDuration() {
@@ -252,7 +358,12 @@ class FluxImpl implements Flux {
 
         @Override
         public boolean isRunning() {
-            return false;
+            return status == STARTED || status == RESUMED;
+        }
+
+        @Override
+        public void remove() {
+            status = REMOVED;
         }
     }
 }

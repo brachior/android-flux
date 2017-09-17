@@ -10,7 +10,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 26
         versionCode 1
-        versionName "1.0.0"
+        versionName "1.1.0"
     }
     buildTypes {
         release {
@@ -55,7 +55,7 @@ artifacts {
 }
 
 group = 'net.brach.android'
-version = '1.0.0'
+version = '1.1.0'
 
 install {
     repositories.mavenInstaller {
@@ -68,7 +68,7 @@ install {
             packaging 'aar'
             groupId 'net.brach.android'
             artifactId 'flux'
-            version '1.0.0'
+            version '1.1.0'
 
             licenses {
                 license {
@@ -106,10 +106,10 @@ bintray {
         vcsUrl = 'https://github.com/brachior/android-flux'
         publish = true
         version {
-            name = '1.0.0'
+            name = '1.1.0'
             desc = 'Android Flux'
             released = new Date()
-            vcsTag = 'v1.0.0'
+            vcsTag = 'v1.1.0'
         }
     }
 }
