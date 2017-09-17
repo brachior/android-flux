@@ -15,7 +15,7 @@ Add this to your app build.gradle:
 
 ```gradle
 dependencies {
-    compile 'net.brach.android:flux:1.0.0'
+    compile 'net.brach.android:flux:1.1.0'
 }
 ```
 
