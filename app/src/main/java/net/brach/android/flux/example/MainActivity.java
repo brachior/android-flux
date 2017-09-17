@@ -3,7 +3,6 @@ package net.brach.android.flux.example;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 
 import net.brach.android.flux.Flux;
@@ -32,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         random = new Random();
         to = findViewById(R.id.end);
 
-        findViewById(R.id.reset).setOnClickListener(new View.OnClickListener() {
+        to.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 init();
@@ -43,56 +42,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void init() {
-        ViewGroup flowers = findViewById(R.id.flowers);
-        for (int i = 0; i < flowers.getChildCount(); i++) {
-            Button button = (Button) flowers.getChildAt(i);
+        flowers((Button) findViewById(R.id.NW));
+        flowers((Button) findViewById(R.id.NE));
+        flowers((Button) findViewById(R.id.SE));
+        flowers((Button) findViewById(R.id.SW));
 
-            button.setAlpha(1);
-            button.setClickable(true);
+        circles((Button) findViewById(R.id.N));
+        circles((Button) findViewById(R.id.E));
+        circles((Button) findViewById(R.id.S));
+        circles((Button) findViewById(R.id.W));
+    }
 
-            int count = 1 + random.nextInt(100);
-            final Flux flux = new Flux.Builder(this)
-                    .from(button)
-                    .to(to)
-                    .number(count)
-                    .assets(bitmaps, 15, 65)
-                    .duration(1000, 1500)
-                    .build();
+    private void circles(Button button) {
+        button.setAlpha(1);
+        button.setClickable(false);
 
-            button.setText(String.valueOf(count));
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    flux.start();
-                    v.setOnClickListener(null);
-                }
-            });
-        }
+        int count = 1 + random.nextInt(100);
+        new Flux.Builder(this)
+                .from(button)
+                .to(to)
+                .number(count)
+                .circle(7, 12)
+                .duration(1000, 1500)
+                .run();
 
-        ViewGroup circles = findViewById(R.id.circles);
-        for (int i = 0; i < circles.getChildCount(); i++) {
-            Button button = (Button) circles.getChildAt(i);
+        button.setText(String.valueOf(count));
+    }
 
-            button.setAlpha(1);
-            button.setClickable(true);
+    private void flowers(Button button) {
+        button.setAlpha(1);
+        button.setClickable(true);
 
-            int count = 1 + random.nextInt(100);
-            final Flux flux = new Flux.Builder(this)
-                    .from(button)
-                    .to(to)
-                    .number(count)
-                    .circle(7, 12)
-                    .duration(1000, 1500)
-                    .build();
+        int count = 1 + random.nextInt(100);
+        final Flux flux = new Flux.Builder(this)
+                .from(button)
+                .to(to)
+                .number(count)
+                .assets(bitmaps, 15, 65)
+                .duration(1000, 1500)
+                .build();
 
-            button.setText(String.valueOf(count));
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    flux.start();
-                    v.setOnClickListener(null);
-                }
-            });
-        }
+        button.setText(String.valueOf(count));
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                flux.start();
+                v.setOnClickListener(null);
+            }
+        });
     }
 }
